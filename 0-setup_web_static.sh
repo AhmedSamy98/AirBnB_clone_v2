@@ -1,15 +1,27 @@
 #!/usr/bin/env bash
-# install nginx and configure it to serve some content
-if ! which nginx > /dev/null 2>&1; then
-sudo apt-get -y update
+# script that sets up web servers for the deployment of web_static
+sudo apt-get update
 sudo apt-get -y install nginx
-fi
+sudo ufw allow 'Nginx HTTP'
+
+sudo mkdir -p /data/
+sudo mkdir -p /data/web_static/
+sudo mkdir -p /data/web_static/releases/
 sudo mkdir -p /data/web_static/shared/
 sudo mkdir -p /data/web_static/releases/test/
-sudo echo -e "<html>\n  <head>\n  </head>\n  <body>\n    Holberton School\n  </body>\n</html>" | sudo tee /data/web_static/releases/test/index.html
-sudo ln -sf /data/web_static/releases/test/ /data/web_static/current
+sudo touch /data/web_static/releases/test/index.html
+sudo echo "<html>
+  <head>
+  </head>
+  <body>
+    Holberton School
+  </body>
+</html>" | sudo tee /data/web_static/releases/test/index.html
+
+sudo ln -s -f /data/web_static/releases/test/ /data/web_static/current
+
 sudo chown -R ubuntu:ubuntu /data/
-myc="\n\tlocation \/hbnb_static\/ {\n\t\talias \/data\/web_static\/current\/\;\n\t}\n"
-st="server {"
-sudo sed -i "s/^$st/$st$myc/" /etc/nginx/sites-enabled/default
-sudo service nginx start
+
+sudo sed -i '/listen 80 default_server/a location /hbnb_static { alias /data/web_static/current/;}' /etc/nginx/sites-enabled/default
+
+sudo service nginx restart
